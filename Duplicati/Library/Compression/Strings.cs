@@ -12,6 +12,12 @@ namespace Duplicati.Library.Compression.Strings {
         public static string DisplayName { get { return LC.L(@"Zip compression"); } }
         public static string FileNotFoundError(string filename) { return LC.L(@"File not found: {0}", filename); }
     }
+    internal static class FileArchiveLZip
+    {
+        public static string Description { get { return LC.L(@"This module provides LZip compression around a tar file. LZip uses LZMA compression."); } }
+        public static string DisplayName { get { return LC.L(@"LZip compression"); } }
+        public static string FileNotFoundError(string filename) { return LC.L(@"File not found: {0}", filename); }
+    }
     internal static class SevenZipCompression {
         public static string NoWriterError { get { return LC.L(@"Archive not opened for writing"); } }
         public static string NoReaderError { get { return LC.L(@"Archive not opened for reading"); } }
@@ -24,5 +30,12 @@ namespace Duplicati.Library.Compression.Strings {
         public static string CompressionlevelShort { get { return LC.L(@"Sets the 7z compression level"); } }
         public static string FastalgoLong { get { return LC.L(@"This option controls the compression algorithm used. Enabling this option will cause 7z to use the fast algorithm, which produces slightly less compression."); } }
         public static string FastalgoShort { get { return LC.L(@"Sets the 7z fast algorithm usage"); } }
+    }
+    internal static class FileArchiveXz
+    {
+        public static string DisplayName { get { return LC.L(@"xz compression"); } }
+        public static string Description { get { return LC.L(@"This module provides the popular xz file compression, packaged in a tar, to produce txz files."); } }
+        public static string NoWriteError { get { return LC.L(@"Archive not opened for writing"); } }
+        public static string NoReadError { get { return LC.L(@"Archive not opened for reading"); } }
     }
 }
