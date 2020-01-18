@@ -25,4 +25,12 @@ namespace Duplicati.Library.Compression.Strings {
         public static string FastalgoLong { get { return LC.L(@"This option controls the compression algorithm used. Enabling this option will cause 7z to use the fast algorithm, which produces slightly less compression."); } }
         public static string FastalgoShort { get { return LC.L(@"Sets the 7z fast algorithm usage"); } }
     }
+    internal static class FileArchiveLzip {
+        public static string CompressionlevelDeprecated(string optionname) { return LC.L(@"Please use the {0} option instead", optionname); }
+        public static string CompressionlevelLong { get { return LC.L(@"This option controls the compression level used. A setting of zero gives no compression, and a setting of 9 gives maximum compression."); } }
+        public static string CompressionlevelShort { get { return LC.L(@"Sets the lzip compression level"); } }
+        public static string Description { get { return LC.L(@"This module provides lzip compression, which uses the LZMA algorithm. Lzip is designed for data sharing and long-term archiving."); } }
+        public static string DisplayName { get { return LC.L(@"lzip compression"); } }
+        public static string FileNotFoundError(string filename) { return LC.L(@"File not found: {0}", filename); }
+    }
 }
