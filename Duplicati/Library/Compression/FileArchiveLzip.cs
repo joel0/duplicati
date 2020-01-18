@@ -1,6 +1,8 @@
 ﻿using Duplicati.Library.Interface;
 using SharpCompress.Archives;
+using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Readers.Tar;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Tar;
 using System;
@@ -16,7 +18,7 @@ namespace Duplicati.Library.Compression
     /// An abstraction of an lzip archive as a FileArchive, based on SharpCompress.
     /// Like FileArchiveZip, read &amp; write access at the same time has not been implemented.
     /// </summary>
-    class FileArchiveLzip : ICompression {
+    public class FileArchiveLzip : ICompression {
         /// <summary>
         /// The tag used for logging
         /// </summary>
@@ -36,12 +38,6 @@ namespace Duplicati.Library.Compression
         /// This property indicates reading or writing access mode of the file archive
         /// </summary>
         readonly ArchiveMode m_mode;
-
-        // TODO: this doc isn't right. There's no ZipArchive or LzipArchive.
-        /// <summary>
-        /// The LzipArchive instance used when reading archives
-        /// </summary>
-        private IArchive m_archive;
 
         /// <summary>
         /// The stream used to either read or write the archive
@@ -65,26 +61,14 @@ namespace Duplicati.Library.Compression
         /// </summary>
         public FileArchiveLzip() { }
 
-        private IArchive Archive
-        {
-            get
-            {
-                if (m_archive == null)
-                {
-                    m_stream.Position = 0;
-                    m_archive = ArchiveFactory.Open(m_stream);
-                }
-                return m_archive;
-            }
-        }
-
         public Stream GetStreamFromReader(IEntry entry)
         {
-            SharpCompress.Readers.Tar.TarReader rd = null;
+            TarReader rd = null;
 
             try
             {
-                rd = SharpCompress.Readers.Tar.TarReader.Open(m_stream);
+                m_stream.Seek(0, SeekOrigin.Begin);
+                rd = TarReader.Open(m_stream);
 
                 while (rd.MoveToNextEntry())
                 {
@@ -123,6 +107,7 @@ namespace Duplicati.Library.Compression
             if (mode == ArchiveMode.Write)
             {
                 var compression = new TarWriterOptions(CompressionType.LZip, true);
+                //var compression = new TarWriterOptions(CompressionType.None, true);
 
                 // TODO: can the compression level be set?
 
@@ -143,7 +128,7 @@ namespace Duplicati.Library.Compression
         /// <summary>
         /// Gets the filename extension used by the compression module
         /// </summary>
-        public string FilenameExtension { get { return "tar.lz"; } }
+        public string FilenameExtension { get { return "tlzip"; } }
         /// <summary>
         /// Gets a friendly name for the compression module
         /// </summary>
@@ -218,6 +203,7 @@ namespace Duplicati.Library.Compression
 
             if (ze is IArchiveEntry entry)
             {
+                // TODO: is this code path needed?
                 return entry.OpenEntryStream();
             }
             else if (ze is SharpCompress.Common.Tar.TarEntry)
@@ -238,9 +224,13 @@ namespace Duplicati.Library.Compression
                 var d = new Dictionary<string, IEntry>(Utility.Utility.ClientFilenameStringComparer);
                 try
                 {
-                    foreach (var en in Archive.Entries)
+                    m_stream.Position = 0;
+                    using (var reader = TarReader.Open(m_stream))
                     {
-                        d[en.Key] = en;
+                        while (reader.MoveToNextEntry())
+                        {
+                            d[reader.Entry.Key] = reader.Entry;
+                        };
                     }
                 }
                 catch (Exception ex)
@@ -337,6 +327,7 @@ namespace Duplicati.Library.Compression
             /// </param>
             protected override void Dispose(bool disposing)
             {
+                Seek(0, SeekOrigin.Begin);
                 m_archiveWriter.Write(m_fileName, this, m_lastWriteTime, Length);
 
                 base.Dispose(disposing);
@@ -365,7 +356,8 @@ namespace Duplicati.Library.Compression
         {
             get
             {
-                return m_mode == ArchiveMode.Write ? m_stream.Length : Archive.TotalSize;
+                // TODO: 0 should be replaced by the size from the Archive
+                return m_mode == ArchiveMode.Write ? m_stream.Length : 0;
             }
         }
 
@@ -402,12 +394,6 @@ namespace Duplicati.Library.Compression
         #region IDispose Members
         public void Dispose()
         {
-            if (m_archive != null)
-            {
-                m_archive.Dispose();
-            }
-            m_archive = null;
-
             if (m_writer != null)
             {
                 m_writer.Dispose();
